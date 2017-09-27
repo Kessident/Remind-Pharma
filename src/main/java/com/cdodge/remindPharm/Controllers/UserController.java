@@ -2,6 +2,7 @@ package com.cdodge.remindPharm.Controllers;
 
 import com.cdodge.remindPharm.Models.User;
 import com.cdodge.remindPharm.Repository.UserRepo;
+import org.jetbrains.annotations.Contract;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.bcrypt.BCrypt;
 import org.springframework.stereotype.Controller;
@@ -9,6 +10,7 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 
+import javax.persistence.Column;
 import javax.servlet.http.HttpSession;
 import java.util.ArrayList;
 import java.util.List;
@@ -31,15 +33,15 @@ public class UserController {
     @PostMapping("/register")
     public String loginPost(String name, String email, String password, String passwordConfirm, String phoneNumber, Model model){
         List<String> errors = new ArrayList<>();
-        if (name == null || name.isEmpty()){
+        if (isInvalid(name)){
             errors.add("Please enter a name.");
         }
-        if (email == null || email.isEmpty()){
+        if (isInvalid(email)){
             errors.add("Please enter an email.");
         }
-        if (password == null || password.isEmpty()){
+        if (isInvalid(password)){
             errors.add("Please enter a password.");
-        } else if (passwordConfirm == null || passwordConfirm.isEmpty()){
+        } else if (isInvalid(passwordConfirm)){
             errors.add("Please enter a password confirmation.");
         } else if (!password.equals(passwordConfirm)){
             errors.add("Passwords do not match.");
@@ -66,7 +68,7 @@ public class UserController {
         }
     }
 
-    @GetMapping("login")
+    @GetMapping("/login")
     public String loginGET(HttpSession session){
         if (session.getAttribute("userID") != null) {
             return "index";
@@ -75,11 +77,11 @@ public class UserController {
         }
     }
 
-    @PostMapping("login")
+    @PostMapping("/login")
     public String loginPost(String email, String password, HttpSession session, Model model){
         User found = users.findByEmail(email);
         if (found == null) {
-            model.addAttribute("notFound", "User not found");
+            model.addAttribute("error", "User not found");
             return "login";
         }
 
@@ -92,5 +94,54 @@ public class UserController {
             model.addAttribute("wrongPass", "Incorrect username/password combination");
             return "login";
         }
+    }
+
+    @PostMapping("/edit")
+    public String editUserInfo(String password, String passwordConfirm, String oldPassword, String phoneNumber, String phoneNumberConfirm, HttpSession session, Model model){
+        if (session.getAttribute("userID") == null){
+            model.addAttribute("error", "You must be logged in to do that");
+            return "login";
+        }
+
+        List<String> messages = new ArrayList<>();
+
+        User loggedIn = users.findOne( (int) session.getAttribute("userID"));
+
+        if (isValid(password) && isValid(passwordConfirm) && isValid(oldPassword)){
+            if (password.equals(passwordConfirm)){
+                if (BCrypt.checkpw(oldPassword, loggedIn.getPassword())){
+                    loggedIn.setPassword(BCrypt.hashpw(password, BCrypt.gensalt()));
+                    messages.add("Password successfully changed");
+                } else {
+                    messages.add("Incorrect password");
+                }
+            } else {
+                messages.add("Passwords do not match");
+            }
+        }
+
+
+        if (isValid(phoneNumber) && isValid(phoneNumberConfirm)){
+            if (phoneNumber.equals(phoneNumberConfirm)){
+                loggedIn.setPassword(phoneNumber);
+                messages.add("phone number successfully changed");
+            } else {
+                messages.add("Phone numbers do not match");
+            }
+        }
+
+        model.addAttribute("messages", messages);
+        return "index";
+    }
+
+    @Contract(value = "null -> false", pure = true)
+    private boolean isValid(String toBeValidated){
+        return !(toBeValidated == null || toBeValidated.isEmpty());
+    }
+
+
+    @Contract(value = "null -> true", pure = true)
+    private boolean isInvalid(String toBeValidated){
+        return toBeValidated == null || toBeValidated.isEmpty();
     }
 }
