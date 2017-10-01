@@ -10,7 +10,6 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 
-import javax.persistence.Column;
 import javax.servlet.http.HttpSession;
 import java.util.ArrayList;
 import java.util.List;
@@ -25,9 +24,14 @@ public class UserController {
         this.users = users;
     }
 
+    @GetMapping("/")
+    public String indexPage(){
+        return "index";
+    }
+
     @GetMapping("/register")
     public String loginGet(){
-        return "login";
+        return "register";
     }
 
     @PostMapping("/register")
@@ -119,7 +123,6 @@ public class UserController {
                 messages.add("Passwords do not match");
             }
         }
-
 
         if (isValid(phoneNumber) && isValid(phoneNumberConfirm)){
             if (phoneNumber.equals(phoneNumberConfirm)){
