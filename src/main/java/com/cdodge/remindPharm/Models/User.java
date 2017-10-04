@@ -97,6 +97,14 @@ public class User {
         this.medicationsTaking = medicationsTaking;
     }
 
+    public boolean isTaking(Medication med){
+        return medicationsTaking.contains(med);
+    }
+
+    public void addMedication(Medication newMedication){
+        medicationsTaking.add(newMedication);
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;

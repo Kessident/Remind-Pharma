@@ -1,9 +1,10 @@
 package com.cdodge.remindPharm.Models;
 
 public enum Measure {
-    MILLILITER ("mL"),
+    MILLILITER ("ml"),
     MILLIGRAM ("mg"),
     GRAM("g"),
+    PILL("pill")
     ;
 
     private String shorthand;
